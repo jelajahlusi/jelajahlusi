@@ -3,53 +3,152 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
     <title>Unity Web Player | JelajahLusi</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+      body {
+        background-color: #9fc7d5; 
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        overflow: hidden; /* Anti-scroll */
+      }
+      
+      .main-layout {
+        width: 100%;
+        max-width: 960px;
+        height: 100vh;
+        margin: 0 auto; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #unity-container {
+        position: relative !important; 
+        top: auto !important; left: auto !important; transform: none !important;
+        background-color: #222;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        width: 100% !important; 
+        height: auto !important;
+        aspect-ratio: 16 / 9; 
+        max-height: 100vh;
+        overflow: hidden;
+      }
+
+      #unity-canvas { width: 100% !important; height: 100% !important; display: block; }
+
+      /* =========================================
+         DESAIN OVERLAY (LAYAR TUMPUK)
+         ========================================= */
+      .overlay-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(34, 34, 34, 0.95);
+        color: white;
+        z-index: 9998; /* Di bawah layar peringatan landscape */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .overlay-screen h1 { margin: 0 0 10px 0; font-size: 2rem; color: #9fc7d5; }
+      .overlay-screen p { margin: 0 0 30px 0; font-size: 1.1rem; color: #ddd; }
+      
+      /* Tombol Kustom */
+      .btn-action {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
+      }
+      .btn-action:hover { background-color: #45a049; transform: scale(1.05); }
+      .btn-action:disabled { background-color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+      /* Sembunyikan layar Resume di awal */
+      #resume-overlay { display: none; }
+
+      /* =========================================
+         FITUR PAKSA LANDSCAPE
+         ========================================= */
+      #landscape-warning { display: none; }
+      @media screen and (orientation: portrait) {
+        .main-layout, .overlay-screen { display: none !important; }
+        #landscape-warning {
+          display: flex; position: fixed; top: 0; left: 0;
+          width: 100vw; height: 100vh;
+          background-color: #222; color: white;
+          z-index: 9999; align-items: center; justify-content: center;
+          text-align: center; flex-direction: column; gap: 15px; font-size: 24px;
+        }
+        #landscape-warning i { font-size: 50px; color: #ffeb3b; animation: spin 2s linear infinite; }
+      }
+      
+      @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
   </head>
+  
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=540 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">JelajahLusi</div>
-      </div>
+    <div id="landscape-warning">
+      <i class="fa-solid fa-mobile-screen fa-rotate-90"></i>
+      <strong>Mode Lanskap Dibutuhkan</strong>
+      <span style="font-size: 16px; font-weight: normal; color: #ccc;">Harap putar layar HP Anda untuk bermain.</span>
     </div>
+
+    <div id="welcome-overlay" class="overlay-screen">
+      <h1><i class="fa-solid fa-gamepad"></i> Selamat Datang!</h1>
+      <p>Terima kasih telah bermain game JelajahLusi.</p>
+      <button class="btn-action" id="btn-start" disabled>
+        <i class="fa-solid fa-spinner fa-spin"></i> Memuat Game...
+      </button>
+    </div>
+
+    <div id="resume-overlay" class="overlay-screen">
+      <h1><i class="fa-solid fa-pause"></i> Game Dijeda</h1>
+      <p>Anda keluar dari mode layar penuh.</p>
+      <button class="btn-action" id="btn-resume">
+        <i class="fa-solid fa-play"></i> Lanjutkan Game
+      </button>
+    </div>
+
+    <div class="main-layout">
+        <div id="unity-container" class="unity-desktop">
+          <canvas id="unity-canvas" tabindex="-1"></canvas>
+          <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+              <div id="unity-progress-bar-full"></div>
+            </div>
+          </div>
+          <div id="unity-warning"></div>
+          <div id="unity-footer" style="display: none;"></div>
+        </div>
+    </div>
+
     <script>
       var canvas = document.querySelector("#unity-canvas");
-
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+      
+      // Variabel untuk menyimpan mesin game Unity
+      var myUnityInstance = null; 
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/jelajahlusi.loader.js";
@@ -62,48 +161,13 @@
         companyName: "SmaKemalaBhayangkari5",
         productName: "JelajahLusi",
         productVersion: "1.1",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
+        showBanner: function(msg, type) { console.log(msg); },
       };
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
+        document.querySelector("#unity-container").className = "unity-desktop";
+        canvas.className = "unity-desktop";
       } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
         canvas.style.width = "960px";
         canvas.style.height = "540px";
       }
@@ -115,19 +179,52 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
+        }).then((unityInstance) => {
+          document.querySelector("#unity-loading-bar").style.display = "none";
+          
+          // Simpan instance game ke variabel buatan kita
+          myUnityInstance = unityInstance;
 
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+          // 1. Loading selesai, nyalakan tombol "Mainkan" di layar Selamat Datang
+          const btnStart = document.getElementById('btn-start');
+          btnStart.innerHTML = '<i class="fa-solid fa-expand"></i> Mainkan Sekarang';
+          btnStart.disabled = false;
 
+        }).catch((message) => {
+          alert("Gagal memuat game: " + message);
+        });
+      };
       document.body.appendChild(script);
 
+      // =========================================
+      // LOGIKA TOMBOL & SENSOR FULLSCREEN
+      // =========================================
+      
+      // Tombol Mainkan di klik
+      document.getElementById('btn-start').onclick = () => {
+        document.getElementById('welcome-overlay').style.display = 'none'; // Sembunyikan layar selamat datang
+        if (myUnityInstance) {
+          myUnityInstance.SetFullscreen(1); // Perintahkan game masuk ke layar penuh
+        }
+      };
+
+      // Tombol Lanjutkan di klik
+      document.getElementById('btn-resume').onclick = () => {
+        document.getElementById('resume-overlay').style.display = 'none'; // Sembunyikan layar jeda
+        if (myUnityInstance) {
+          myUnityInstance.SetFullscreen(1); // Perintahkan game masuk ke layar penuh lagi
+        }
+      };
+
+      // Sensor mendeteksi jika layar penuh ditutup (tekan ESC atau tombol HP)
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          // Jika sudah tidak fullscreen, DAN layar selamat datang sudah hilang, maka munculkan layar jeda
+          if (document.getElementById('welcome-overlay').style.display === 'none') {
+            document.getElementById('resume-overlay').style.display = 'flex';
+          }
+        }
+      });
     </script>
   </body>
 </html>
