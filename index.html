@@ -8,90 +8,126 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
       body {
         background-color: #9fc7d5; 
         margin: 0;
         padding: 0;
         font-family: Arial, sans-serif;
-        /* Mencegah layar bisa di-scroll agar fokus ke game */
-        overflow: hidden; 
+        overflow: hidden; /* Anti-scroll */
       }
       
-      /* Pembungkus Utama Game */
       .main-layout {
         width: 100%;
         max-width: 960px;
-        height: 100vh; /* Memenuhi tinggi layar */
+        height: 100vh;
         margin: 0 auto; 
         display: flex;
         align-items: center;
         justify-content: center;
       }
 
-      /* Wadah Game */
       #unity-container {
         position: relative !important; 
-        top: auto !important;
-        left: auto !important;
-        transform: none !important;
-        
+        top: auto !important; left: auto !important; transform: none !important;
         background-color: #222;
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        
         width: 100% !important; 
         height: auto !important;
         aspect-ratio: 16 / 9; 
-        max-height: 100vh; /* Jangan sampai melebihi layar */
+        max-height: 100vh;
         overflow: hidden;
       }
 
-      #unity-canvas {
-        width: 100% !important;
-        height: 100% !important;
-        display: block;
-      }
+      #unity-canvas { width: 100% !important; height: 100% !important; display: block; }
 
       /* =========================================
-         FITUR PAKSA LANDSCAPE UNTUK HP
+         DESAIN OVERLAY (LAYAR TUMPUK)
          ========================================= */
-      #landscape-warning {
-        display: none; /* Sembunyikan secara default */
+      .overlay-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(34, 34, 34, 0.95);
+        color: white;
+        z-index: 9998; /* Di bawah layar peringatan landscape */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
       }
 
-      /* Jika layar mendeteksi orientasi Portrait (Berdiri) */
-      @media screen and (orientation: portrait) {
-        .main-layout {
-          display: none; /* Sembunyikan game */
-        }
-        #landscape-warning {
-          display: flex;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background-color: #222;
-          color: white;
-          z-index: 9999;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 20px;
-          box-sizing: border-box;
-          font-size: 20px;
-          font-weight: bold;
-        }
+      .overlay-screen h1 { margin: 0 0 10px 0; font-size: 2rem; color: #9fc7d5; }
+      .overlay-screen p { margin: 0 0 30px 0; font-size: 1.1rem; color: #ddd; }
+      
+      /* Tombol Kustom */
+      .btn-action {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
       }
+      .btn-action:hover { background-color: #45a049; transform: scale(1.05); }
+      .btn-action:disabled { background-color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+      /* Sembunyikan layar Resume di awal */
+      #resume-overlay { display: none; }
+
+      /* =========================================
+         FITUR PAKSA LANDSCAPE
+         ========================================= */
+      #landscape-warning { display: none; }
+      @media screen and (orientation: portrait) {
+        .main-layout, .overlay-screen { display: none !important; }
+        #landscape-warning {
+          display: flex; position: fixed; top: 0; left: 0;
+          width: 100vw; height: 100vh;
+          background-color: #222; color: white;
+          z-index: 9999; align-items: center; justify-content: center;
+          text-align: center; flex-direction: column; gap: 15px; font-size: 24px;
+        }
+        #landscape-warning i { font-size: 50px; color: #ffeb3b; animation: spin 2s linear infinite; }
+      }
+      
+      @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
   </head>
   
   <body>
     <div id="landscape-warning">
-      <div>
-        <p>🔄</p>
-        <p>Harap putar HP Anda (Landscape) untuk bermain.</p>
-      </div>
+      <i class="fa-solid fa-mobile-screen fa-rotate-90"></i>
+      <strong>Mode Lanskap Dibutuhkan</strong>
+      <span style="font-size: 16px; font-weight: normal; color: #ccc;">Harap putar layar HP Anda untuk bermain.</span>
+    </div>
+
+    <div id="welcome-overlay" class="overlay-screen">
+      <h1><i class="fa-solid fa-gamepad"></i> Selamat Datang!</h1>
+      <p>Terima kasih telah bermain game JelajahLusi.</p>
+      <button class="btn-action" id="btn-start" disabled>
+        <i class="fa-solid fa-spinner fa-spin"></i> Memuat Game...
+      </button>
+    </div>
+
+    <div id="resume-overlay" class="overlay-screen">
+      <h1><i class="fa-solid fa-pause"></i> Game Dijeda</h1>
+      <p>Anda keluar dari mode layar penuh.</p>
+      <button class="btn-action" id="btn-resume">
+        <i class="fa-solid fa-play"></i> Lanjutkan Game
+      </button>
     </div>
 
     <div class="main-layout">
@@ -103,36 +139,16 @@
               <div id="unity-progress-bar-full"></div>
             </div>
           </div>
-          <div id="unity-warning"> </div>
-          <div id="unity-footer">
-            <div id="unity-logo-title-footer"></div>
-            <div id="unity-fullscreen-button"></div>
-            <div id="unity-build-title">JelajahLusi</div>
-          </div>
+          <div id="unity-warning"></div>
+          <div id="unity-footer" style="display: none;"></div>
         </div>
     </div>
 
     <script>
       var canvas = document.querySelector("#unity-canvas");
-
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+      
+      // Variabel untuk menyimpan mesin game Unity
+      var myUnityInstance = null; 
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/jelajahlusi.loader.js";
@@ -145,7 +161,7 @@
         companyName: "SmaKemalaBhayangkari5",
         productName: "JelajahLusi",
         productVersion: "1.1",
-        showBanner: unityShowBanner,
+        showBanner: function(msg, type) { console.log(msg); },
       };
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -163,16 +179,52 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-              }).catch((message) => {
-                alert(message);
-              });
-            };
+        }).then((unityInstance) => {
+          document.querySelector("#unity-loading-bar").style.display = "none";
+          
+          // Simpan instance game ke variabel buatan kita
+          myUnityInstance = unityInstance;
+
+          // 1. Loading selesai, nyalakan tombol "Mainkan" di layar Selamat Datang
+          const btnStart = document.getElementById('btn-start');
+          btnStart.innerHTML = '<i class="fa-solid fa-expand"></i> Mainkan Sekarang';
+          btnStart.disabled = false;
+
+        }).catch((message) => {
+          alert("Gagal memuat game: " + message);
+        });
+      };
       document.body.appendChild(script);
+
+      // =========================================
+      // LOGIKA TOMBOL & SENSOR FULLSCREEN
+      // =========================================
+      
+      // Tombol Mainkan di klik
+      document.getElementById('btn-start').onclick = () => {
+        document.getElementById('welcome-overlay').style.display = 'none'; // Sembunyikan layar selamat datang
+        if (myUnityInstance) {
+          myUnityInstance.SetFullscreen(1); // Perintahkan game masuk ke layar penuh
+        }
+      };
+
+      // Tombol Lanjutkan di klik
+      document.getElementById('btn-resume').onclick = () => {
+        document.getElementById('resume-overlay').style.display = 'none'; // Sembunyikan layar jeda
+        if (myUnityInstance) {
+          myUnityInstance.SetFullscreen(1); // Perintahkan game masuk ke layar penuh lagi
+        }
+      };
+
+      // Sensor mendeteksi jika layar penuh ditutup (tekan ESC atau tombol HP)
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+          // Jika sudah tidak fullscreen, DAN layar selamat datang sudah hilang, maka munculkan layar jeda
+          if (document.getElementById('welcome-overlay').style.display === 'none') {
+            document.getElementById('resume-overlay').style.display = 'flex';
+          }
+        }
+      });
     </script>
   </body>
 </html>
