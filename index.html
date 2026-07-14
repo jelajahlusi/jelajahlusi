@@ -7,44 +7,41 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     
-    <!-- CSS UNTUK TAMPILAN ALA ITCH.IO & PERBAIKAN BUG LATIHAN -->
     <style>
+      /* 1. Pengaturan Background */
       body {
-        /* Warna langit biru muda yang menyatu dengan main menu */
         background-color: #9fc7d5; 
         margin: 0;
         padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
         font-family: Arial, sans-serif;
       }
       
-      /* Pembungkus utama untuk menyelaraskan game dan komentar secara vertikal */
+      /* 2. Pembungkus Utama (Agar posisi di tengah layar) */
       .main-layout {
+        width: 960px;
+        max-width: 95vw;
+        margin: 40px auto; /* Membuat kontainer rata tengah secara otomatis */
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 40px; /* Spasi bersih antara game dan komentar */
-        padding: 40px 0;
-        width: 960px; /* Lebar game */
-        max-width: 95vw;
+        gap: 40px; /* Jarak aman antara game dan komentar */
       }
 
-      /* Kontainer putih berbayangan ala itch.io untuk game */
-      #unity-container {
-        background-color: #ffffff;
+      /* 3. KUNCI PERBAIKAN: Mematikan paksa posisi 'absolute' bawaan Unity */
+      #unity-container.unity-desktop {
+        position: relative !important; 
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        
+        background-color: #222;
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         border-radius: 6px;
-        padding: 0;
-        width: 100%; /* Isi main-layout */
-        overflow: hidden; /* Pastikan game tidak bocor keluar kontainer berbayangan */
+        width: 100% !important;
       }
 
-      /* Wadah untuk area komentar Giscus */
+      /* 4. Wadah Komentar */
       #comments-section {
-        width: 100%; /* Isi main-layout */
+        width: 100%;
         background-color: #ffffff;
         padding: 30px;
         border-radius: 8px;
@@ -55,10 +52,10 @@
   </head>
   
   <body>
-    <!-- PEMBUNGKUS UTAMA -->
+    <!-- PEMBUNGKUS UTAMA BARU -->
     <div class="main-layout">
         
-        <!-- WADAH GAME UNITY (TETAP SAMA DENGAN TEMPLATE ASLI) -->
+        <!-- WADAH GAME UNITY -->
         <div id="unity-container" class="unity-desktop">
           <canvas id="unity-canvas" width=960 height=540 tabindex="-1"></canvas>
           <div id="unity-loading-bar">
@@ -75,13 +72,10 @@
           </div>
         </div>
 
-        <!-- FITUR KOMENTAR GISCUS (DIPERBAIKI PENEMPATANNYA) -->
+        <!-- FITUR KOMENTAR GISCUS -->
         <div id="comments-section">
             <h3 style="color: #333; margin-bottom: 20px; text-align: center;">Kolom Komentar</h3>
             
-            <!-- TEMPELKAN KODE SCRIPT GISCUS ASLI KAMU DI SINI: -->
-            <!-- JANGAN GANTI KODE DI BAWAH INI JIKA KAMU INGIN MENCOBA TAMPILANNYA SEKARANG. -->
-            <!-- JIKA SUDAH BERHASIL, GANTI DENGAN KODE GISCUS ASLI DARI GISCUS.APP -->
             <script src="https://giscus.app/client.js"
                     data-repo="jelajahlusi/jelajahlusi"
                     data-repo-id="R_kgDOTX8pZA"
@@ -98,9 +92,10 @@
                     async>
             </script>
         </div>
+
     </div>
 
-    <!-- SCRIPT UNITY BUILD (DIPERBAIKI UNTUK TATA LETAK BARU) -->
+    <!-- SCRIPT UNITY BUILD -->
     <script>
       var canvas = document.querySelector("#unity-canvas");
 
