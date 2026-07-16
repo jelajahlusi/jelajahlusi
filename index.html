@@ -4,7 +4,22 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
-    <title>Unity Web Player | JelajahLusi</title>
+    
+    <title>JelajahLusi | Game Edukasi</title>
+    <meta name="description" content="Ayo mainkan JelajahLusi! Petualangan seru menanti Anda. Mainkan langsung di browser tanpa perlu install.">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jelajahlusi.my.id/">
+    <meta property="og:title" content="JelajahLusi | Game Edukasi">
+    <meta property="og:description" content="Ayo mainkan JelajahLusi! Petualangan seru menanti Anda. Mainkan langsung di browser tanpa perlu install.">
+    <meta property="og:image" content="https://jelajahlusi.my.id/thumbnail.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://jelajahlusi.my.id/">
+    <meta name="twitter:title" content="JelajahLusi | Game Edukasi">
+    <meta name="twitter:description" content="Ayo mainkan JelajahLusi! Petualangan seru menanti Anda. Mainkan langsung di browser tanpa perlu install.">
+    <meta name="twitter:image" content="https://jelajahlusi.my.id/thumbnail.jpg">
+
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     
@@ -170,7 +185,6 @@
       }
 
       var buildUrl = "Build";
-      // MENYESUAIKAN DENGAN NAMA FILE BARU KAMU
       var loaderUrl = buildUrl + "/jelajahlusi web.loader.js";
       var config = {
         arguments: [],
@@ -206,12 +220,12 @@
           // Simpan instance game ke variabel
           myUnityInstance = unityInstance;
 
-          // Tombol fullscreen bawaan Unity disembunyikan di CSS, tapi kita jaga fungsinya
+          // Jaga fungsi tombol fullscreen bawaan
           document.querySelector("#unity-fullscreen-button").onclick = () => {
             unityInstance.SetFullscreen(1);
           };
 
-          // 1. Loading selesai, nyalakan tombol "Mainkan" di layar Selamat Datang
+          // 1. Loading selesai, nyalakan tombol "Mainkan"
           const btnStart = document.getElementById('btn-start');
           btnStart.innerHTML = '<i class="fa-solid fa-expand"></i> Mainkan Sekarang';
           btnStart.disabled = false;
@@ -226,26 +240,22 @@
       // LOGIKA TOMBOL & SENSOR FULLSCREEN
       // =========================================
       
-      // Tombol Mainkan di klik
       document.getElementById('btn-start').onclick = () => {
-        document.getElementById('welcome-overlay').style.display = 'none'; // Sembunyikan layar selamat datang
+        document.getElementById('welcome-overlay').style.display = 'none';
         if (myUnityInstance) {
-          myUnityInstance.SetFullscreen(1); // Masuk fullscreen
+          myUnityInstance.SetFullscreen(1);
         }
       };
 
-      // Tombol Lanjutkan di klik
       document.getElementById('btn-resume').onclick = () => {
-        document.getElementById('resume-overlay').style.display = 'none'; // Sembunyikan layar jeda
+        document.getElementById('resume-overlay').style.display = 'none';
         if (myUnityInstance) {
-          myUnityInstance.SetFullscreen(1); // Masuk fullscreen lagi
+          myUnityInstance.SetFullscreen(1);
         }
       };
 
-      // Sensor mendeteksi jika layar penuh ditutup
       document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement) {
-          // Jika tidak fullscreen DAN layar selamat datang sudah hilang -> Munculkan Jeda
           if (document.getElementById('welcome-overlay').style.display === 'none') {
             document.getElementById('resume-overlay').style.display = 'flex';
           }
