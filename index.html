@@ -160,116 +160,131 @@
     </div>
 
     <script>
-      var canvas = document.querySelector("#unity-canvas");
+  var canvas = document.querySelector("#unity-canvas");
+  var myUnityInstance = null;
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  function unityShowBanner(msg, type) {
+    var warningBanner = document.querySelector("#unity-warning");
+    if (!warningBanner) return;
+    var div = document.createElement('div');
+    div.innerHTML = msg;
+    warningBanner.appendChild(div);
+    if (type == 'error') div.style = 'background: red; padding: 10px; color: white;';
+    else if (type == 'warning') div.style = 'background: yellow; padding: 10px; color: black;';
+    setTimeout(function() { if (div.parentNode) warningBanner.removeChild(div); }, 5000);
+  }
+
+  var buildUrl = "Build";
+  var loaderUrl = buildUrl + "/jelajahlusi.loader.js";
+  var config = {
+    arguments: [],
+    dataUrl: buildUrl + "/jelajahlusi.data",
+    frameworkUrl: buildUrl + "/jelajahlusi.framework.js",
+    codeUrl: buildUrl + "/jelajahlusi.wasm",
+    streamingAssetsUrl: "StreamingAssets",
+    companyName: "SmaKemalaBhayangkari5",
+    productName: "JelajahLusi",
+    productVersion: "1.1",
+    showBanner: unityShowBanner,
+  };
+
+  // Pengaturan layar (Desktop vs Mobile)
+  if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    document.querySelector("#unity-container").className = "unity-desktop";
+    canvas.className = "unity-desktop";
+  } else {
+    canvas.style.width = "960px";
+    canvas.style.height = "540px";
+  }
+
+  // Tampilkan loading bar Unity
+  document.querySelector("#unity-loading-bar").style.display = "block";
+  var btnStart = document.getElementById('btn-start');
+
+  function showStartError(message) {
+    if (btnStart) {
+      btnStart.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Gagal Memuat — Coba Lagi';
+      btnStart.disabled = false;
+      btnStart.onclick = function() { location.reload(); };
+    }
+    console.error("[JelajahLusi] Error:", message);
+    unityShowBanner("Gagal: " + message, "error");
+  }
+
+  // Timeout 5 Menit (Karena file tidak dikompres jadi butuh waktu download lebih lama)
+  var loadTimeout = setTimeout(function() {
+    if (!myUnityInstance) showStartError("Waktu loading habis (5 menit). File terlalu besar atau koneksi lambat.");
+  }, 300000); 
+
+  var script = document.createElement("script");
+  script.src = loaderUrl;
+  script.async = true;
+
+  script.onload = function() {
+    if (typeof createUnityInstance !== "function") {
+      clearTimeout(loadTimeout);
+      return showStartError("File loader.js tidak valid atau path salah.");
+    }
+
+    createUnityInstance(canvas, config, function(progress) {
+      // Update progress bar Unity
+      var bar = document.querySelector("#unity-progress-bar-full");
+      if (bar) bar.style.width = (100 * progress) + "%";
       
-      // Variabel untuk menyimpan instance game Unity
-      var myUnityInstance = null; 
-
-      // Variabel untuk mendeteksi perangkat iOS
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
+      // Update teks di tombol agar user tahu persentasenya
+      if (btnStart) {
+        btnStart.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunduh ' + Math.round(progress * 100) + '%...';
       }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/jelajahlusi.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/jelajahlusi.data",
-        frameworkUrl: buildUrl + "/jelajahlusi.framework.js",
-        codeUrl: buildUrl + "/jelajahlusi.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "SmaKemalaBhayangkari5",
-        productName: "JelajahLusi",
-        productVersion: "1.1",
-        showBanner: unityShowBanner,
-      };
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        document.querySelector("#unity-container").className = "unity-desktop";
-        canvas.className = "unity-desktop";
-      } else {
-        canvas.style.width = "960px";
-        canvas.style.height = "540px";
-      }
-
-      document.querySelector("#unity-loading-bar").style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          document.querySelector("#unity-loading-bar").style.display = "none";
-          
-          // Simpan instance game ke variabel
-          myUnityInstance = unityInstance;
-
-          var unityFullscreenBtn = document.querySelector("#unity-fullscreen-button");
-          if (unityFullscreenBtn !== null) {
-            unityFullscreenBtn.onclick = () => {
-              unityInstance.SetFullscreen(1);
-            };
-          }
-
-          // Loading selesai, nyalakan tombol "Mainkan"
-          const btnStart = document.getElementById('btn-start');
-          btnStart.innerHTML = '<i class="fa-solid fa-expand"></i> Mainkan Sekarang';
-          btnStart.disabled = false;
-
-        }).catch((message) => {
-          alert("Error: " + message);
-        });
-      };
-      document.body.appendChild(script);
-
-      // =========================================
-      // LOGIKA TOMBOL & SENSOR FULLSCREEN
-      // =========================================
+    }).then(function(unityInstance) {
+      clearTimeout(loadTimeout);
+      myUnityInstance = unityInstance;
       
-      document.getElementById('btn-start').onclick = () => {
-        document.getElementById('welcome-overlay').style.display = 'none';
-        if (myUnityInstance) {
-          // Jika BUKAN iOS, maka paksa Fullscreen. Jika iOS, abaikan perintah ini.
-          if (!isIOS) {
-            myUnityInstance.SetFullscreen(1);
-          }
-        }
-      };
+      // Sembunyikan loading bar bawaan Unity
+      document.querySelector("#unity-loading-bar").style.display = "none";
 
-      document.getElementById('btn-resume').onclick = () => {
-        document.getElementById('resume-overlay').style.display = 'none';
-        if (myUnityInstance) {
-          if (!isIOS) {
-            myUnityInstance.SetFullscreen(1);
-          }
-        }
-      };
+      // Ubah tombol menjadi "Mainkan"
+      var btnStart = document.getElementById('btn-start');
+      btnStart.innerHTML = '<i class="fa-solid fa-expand"></i> Mainkan Sekarang';
+      btnStart.disabled = false;
 
-      document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-          if (document.getElementById('welcome-overlay').style.display === 'none') {
-            document.getElementById('resume-overlay').style.display = 'flex';
-          }
-        }
-      });
-    </script>
+    }).catch(function(message) {
+      clearTimeout(loadTimeout);
+      showStartError(message || "Gagal inisialisasi game. Cek console browser.");
+    });
+  };
+
+  script.onerror = function() {
+    clearTimeout(loadTimeout);
+    showStartError("Gagal mengunduh loader.js. Pastikan folder 'Build' ada di GitHub.");
+  };
+
+  document.body.appendChild(script);
+
+  // =========================================
+  // LOGIKA TOMBOL & SENSOR FULLSCREEN
+  // =========================================
+  document.getElementById('btn-start').onclick = function() {
+    document.getElementById('welcome-overlay').style.display = 'none';
+    if (myUnityInstance && !isIOS) {
+      myUnityInstance.SetFullscreen(1);
+    }
+  };
+
+  document.getElementById('btn-resume').onclick = function() {
+    document.getElementById('resume-overlay').style.display = 'none';
+    if (myUnityInstance && !isIOS) {
+      myUnityInstance.SetFullscreen(1);
+    }
+  };
+
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement) {
+      if (document.getElementById('welcome-overlay').style.display === 'none') {
+        document.getElementById('resume-overlay').style.display = 'flex';
+      }
+    }
+  });
+</script>
   </body>
 </html>
